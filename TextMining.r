@@ -63,14 +63,55 @@ inspect(dtm[1:5,50:53])
 #total frequency of each word occuring across the documents
 freq <- colSums(as.matrix(dtm))
 
+#number of unique words
 length(freq)
 
 #sort
-ord <- order(freq.decreasing=TRUE)
+ord <- order(freq,decreasing=TRUE)
 
 #most frequently occuring terms
 freq[head(ord)]
 
-#least frequently occuring terms
+#least frequently occurring terms
 freq[tail(ord)]
 
+#filter out frequently and infrequently occurring words (they are mostly descriptive of particular document)
+dtmr <- DocumentTermMatrix(docs, control = list(wordLengths = c(4,20),bounds = list(global = c(2,5))))
+
+freqr <- colSums(as.matrix(dtmr))
+
+length(freqr)
+
+#sort in ascending order
+ordr <- order(freqr, decreasing = TRUE)
+
+#most frequently occurring terms
+freq[head(ordr)]
+
+#least frequently occurring terms
+freq[tail(ordr)]
+
+#list most frequent terms
+findFreqTerms(dtmr, lowfreq = 10)
+
+#correlations
+findAssocs(dtmr, "forest", 0.6)
+findAssocs(dtmr, "year", 0.6)
+
+#histogram
+wf = data.frame(term=names(freqr), occurrences=freqr)
+library(ggplot2)
+p <- ggplot(subset(wf, freqr>3),aes(term,occurrences))
+p <- p + geom_bar(stat="identity")
+p <- p + theme(axis.text.x = element_text(angle = 45, hjust = 1))
+p
+
+#wordcloud
+install.packages('wordcloud')
+library(wordcloud)
+
+#for consistent look across clouds
+set.seed(46)
+
+#limit words by specifying min frequency
+wordcloud(names(freqr), freqr, min.freq = 50, random.order = FALSE, colors = brewer.pal(8, "Dark2"), scale = c(4, 0.5), rot.per = 0.35, max.words = 200, min.words = 5, use.r.layout = FALSE, margin = c(2, 2, 2, 2))
